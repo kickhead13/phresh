@@ -1,0 +1,4 @@
+img i 'test.jpg'
+img j 'test.jpg'
+layer i j 200 200 50
+save i 'layer.jpg' jpg

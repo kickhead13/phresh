@@ -106,8 +106,48 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
         }
     }
 
-    pub fn layer_command(self: &Self, words: Vec<&str>) {
-        println!("layer");
+    pub fn layer_command(self: &mut Self, words: Vec<&str>) {
+        if words.len() < 3 {
+            eprintln!("[ERROR] Not enough params for img command");
+            std::process::exit(3);
+        }
+        
+        if prelude::word_type(words[1].to_string()) != prelude::WordType::Variable 
+        || prelude::word_type(words[2].to_string()) != prelude::WordType::Variable 
+        || prelude::word_type(words[3].to_string()) != prelude::WordType::NumValue
+        || prelude::word_type(words[4].to_string()) != prelude::WordType::NumValue
+        || prelude::word_type(words[5].to_string()) != prelude::WordType::NumValue {
+            eprintln!("[ERROR] Wrong types for params in img command");
+            std::process::exit(3);
+        }
+        
+        let pos_x = words[3].to_string().parse::<u32>().unwrap();
+        let pos_y = words[4].to_string().parse::<u32>().unwrap();
+        let opacity = words[5].to_string().parse::<u32>().unwrap();
+            
+        println!("{opacity}");
+
+        if let (Some(&indexv1), Some(&indexv2)) = (self.imgs.get(words[1]), self.imgs.get(words[2])) {
+            let widthv1 = self.memory[indexv1].width();
+            let heightv1 = self.memory[indexv1].height();
+            let cloned_v2_mem = self.memory[indexv2].clone();
+            for xi in pos_x..widthv1 {
+                for yi in pos_y..heightv1 {
+                    let mut pixelv1 = self.memory[indexv1].get_pixel_mut(xi, yi);
+                    let pixelv2 = cloned_v2_mem.get_pixel(xi - pos_x, yi - pos_y);
+                    pixelv1.0[0] = ((u32::from(pixelv1.0[0]) * (100 - opacity))/100 + (u32::from(pixelv2.0[0]) * opacity) / 100) as u8;
+                    pixelv1.0[1] = ((u32::from(pixelv1.0[1]) * (100 - opacity))/100 + (u32::from(pixelv2.0[1]) * opacity) / 100) as u8;
+                    pixelv1.0[2] = ((u32::from(pixelv1.0[2]) * (100 - opacity))/100 + (u32::from(pixelv2.0[2]) * opacity) / 100) as u8;
+                }
+            }
+        } else {
+            eprintln!("[ERROR] {} is not a variable", words[1]);
+            std::process::exit(5);
+        }
+    }
+
+    pub fn canvas_command(self: &Self, words: Vec<&str>) {
+        println!("canvas");
     }
 
     pub fn interpret(self: &mut Self, line: String) {
@@ -121,6 +161,9 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
             },
             prelude::WordType::LayerCommand => {
                 self.layer_command(words);
+            },
+            prelude::WordType::CanvasCommand => {
+                self.canvas_command(words);
             },
             prelude::WordType::Variable => {
                 println!("VARIABLE");
