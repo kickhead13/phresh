@@ -11,13 +11,8 @@ use std::io::{
 
 use std::collections::HashMap;
 
-pub struct Layer {
-    pub imgs: HashMap<String, usize>
-}
-
 pub struct Lexer<'b, B> {
     pub buf_reader: &'b mut BufReader<B>,
-    pub layers: Vec<Layer>,
     pub imgs: HashMap<String, usize>,
     pub memory: Vec<RgbImage>
 }
@@ -27,7 +22,6 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
         Self {
             buf_reader: buf_reader,
             imgs: HashMap::<String, usize>::new(),
-            layers: Vec::new(),
             memory: Vec::new()
         }
     }
@@ -97,7 +91,7 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
 
         match self.imgs.get(words[1]) {
             Some(&index) => {
-                self.memory[index].save_with_format(filename, ImageFormat::from_extension(words[3]).expect("FAIL"));
+                _ = self.memory[index].save_with_format(filename, ImageFormat::from_extension(words[3]).expect("FAIL"));
             },
             None => {
                 eprintln!("[ERROR] {} is not a variable", words[1]);
@@ -133,7 +127,7 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
             let cloned_v2_mem = self.memory[indexv2].clone();
             for xi in pos_x..widthv1 {
                 for yi in pos_y..heightv1 {
-                    let mut pixelv1 = self.memory[indexv1].get_pixel_mut(xi, yi);
+                    let pixelv1 = self.memory[indexv1].get_pixel_mut(xi, yi);
                     let pixelv2 = cloned_v2_mem.get_pixel(xi - pos_x, yi - pos_y);
                     pixelv1.0[0] = ((u32::from(pixelv1.0[0]) * (100 - opacity))/100 + (u32::from(pixelv2.0[0]) * opacity) / 100) as u8;
                     pixelv1.0[1] = ((u32::from(pixelv1.0[1]) * (100 - opacity))/100 + (u32::from(pixelv2.0[1]) * opacity) / 100) as u8;
@@ -147,7 +141,7 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
     }
 
     pub fn canvas_command(self: &Self, words: Vec<&str>) {
-        println!("canvas");
+        println!("canvas {:?}", words);
     }
 
     pub fn interpret(self: &mut Self, line: String) {

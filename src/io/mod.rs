@@ -3,6 +3,7 @@ use std::io::{
     BufReader
 };
 
+#[allow(dead_code)]
 pub fn phresh_line<B>(
     bufreader: &mut BufReader<B>
 ) -> String where B: std::io::Read {
