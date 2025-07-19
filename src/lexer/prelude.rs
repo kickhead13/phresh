@@ -4,6 +4,7 @@ pub enum WordType {
     ImgCommand,
     SaveCommand,
     LayerCommand,
+    CanvasCommand,
     Variable,
     StringValue,
     Extension,
@@ -23,6 +24,10 @@ pub fn word_type(word: String) -> WordType {
 
     if word == statics::SAVE_COMMAND.to_string() {
         return WordType::SaveCommand;
+    }
+
+    if word == statics::CANVAS_COMMAND.to_string() {
+        return WordType::CanvasCommand;
     }
 
     if word == statics::JPG_EXTENSION.to_string() {
