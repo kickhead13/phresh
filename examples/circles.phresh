@@ -1,5 +1,4 @@
 img i 'test.jpg'
-
 circle i 250 250 200 10 255 0 0 100
 circle i 250 250 180 10 255 0 0 80
 circle i 250 250 150 10 255 0 0 60

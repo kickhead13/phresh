@@ -6,6 +6,7 @@ pub enum WordType {
     LayerCommand,
     CanvasCommand,
     CircleCommand,
+    DownscaleCommand,
     Variable,
     StringValue,
     Extension,
@@ -34,7 +35,11 @@ pub fn word_type(word: String) -> WordType {
     if word == statics::CIRCLE_COMMAND.to_string() {
         return WordType::CircleCommand;
     }
-
+    
+    if word == statics::DOWNSCALE_COMMAND.to_string() {
+        return WordType::DownscaleCommand;
+    }
+ 
     if word == statics::JPG_EXTENSION.to_string() {
         return WordType::Extension;
     }
@@ -43,7 +48,7 @@ pub fn word_type(word: String) -> WordType {
         return WordType::StringValue;
     }
 
-    if word.chars().all(|c| c.is_numeric()) {
+    if word.chars().all(|c| c.is_numeric()) || (word.starts_with("-") && word[1..].chars().all(|c| c.is_numeric())) {
         return WordType::NumValue;
     }
 

@@ -10,6 +10,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if phresh_args.len() < 2 {
         eprintln!(" Usage: phresh <filename>");
         eprintln!("   <filename> is NOT optional");
+        std::process::exit(1);
     }
 
     let phresh_filename = phresh_args[1].clone();

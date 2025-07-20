@@ -9,6 +9,7 @@ use std::io::{
     BufReader
 };
 
+use rand::prelude::*;
 use reqwest;
 use std::fs::File;
 
@@ -61,11 +62,12 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
         _ = filename.pop();
 
         if filename.starts_with("https://") || filename.starts_with("http://") {
+            let rngfilename = format!("{}{}.jpg", words[1], rand::rng().random::<i32>());
             if let Ok(response) = reqwest::blocking::get(filename.clone()) {
-                if let (Ok(bytes), Ok(mut file)) = (response.bytes(), File::create("tmp.jpg")) {
+                if let (Ok(bytes), Ok(mut file)) = (response.bytes(), File::create(&rngfilename)) {
                     match file.write_all(&bytes) {
                         Ok(_) => {
-                            filename = "tmp.jpg".to_string();
+                            filename = rngfilename.to_string();
                         },
                         Err(_) => {
                             eprintln!("[ERROR] Couldn't get {filename}...");
@@ -127,7 +129,7 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
 
     pub fn layer_command(self: &mut Self, words: Vec<&str>) {
         if words.len() < 6 {
-            eprintln!("[ERROR] Not enough params for img command");
+            eprintln!("[ERROR] Not enough params for layer command");
             std::process::exit(3);
         }
         
@@ -140,20 +142,62 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
             std::process::exit(3);
         }
         
-        let pos_x = words[3].to_string().parse::<u32>().unwrap();
-        let pos_y = words[4].to_string().parse::<u32>().unwrap();
+        let pos_x = words[3].to_string().parse::<i32>().unwrap();
+        let pos_y = words[4].to_string().parse::<i32>().unwrap();
         let opacity = words[5].to_string().parse::<u32>().unwrap();
             
-        println!("{opacity}");
+        if let (Some(&indexv1), Some(&indexv2)) = (self.imgs.get(words[1]), self.imgs.get(words[2])) {
+            let widthv1 = self.memory[indexv1].width();
+            let heightv1 = self.memory[indexv1].height();
+            let widthv2 = self.memory[indexv2].width();
+            let heightv2 = self.memory[indexv2].height();
+            let cloned_v2_mem = self.memory[indexv2].clone();
+            for xi in (std::cmp::max(pos_x, 0) as u32)..(std::cmp::min(widthv1 as i32, widthv2 as i32 + pos_x) as u32) {
+                for yi in (std::cmp::max(pos_y, 0) as u32)..(std::cmp::min(heightv1 as i32, heightv2 as i32 + pos_y) as u32) {
+                    let pixelv1 = self.memory[indexv1].get_pixel_mut(xi as u32, yi as u32);
+                    let pixelv2 = cloned_v2_mem.get_pixel((xi as i32 - pos_x) as u32, (yi as i32 - pos_y) as u32);
+                    pixelv1.0[0] = ((u32::from(pixelv1.0[0]) * (100 - opacity))/100 + (u32::from(pixelv2.0[0]) * opacity) / 100) as u8;
+                    pixelv1.0[1] = ((u32::from(pixelv1.0[1]) * (100 - opacity))/100 + (u32::from(pixelv2.0[1]) * opacity) / 100) as u8;
+                    pixelv1.0[2] = ((u32::from(pixelv1.0[2]) * (100 - opacity))/100 + (u32::from(pixelv2.0[2]) * opacity) / 100) as u8;
+                }
+            }
+        } else {
+            eprintln!("[ERROR] {} is not a variable", words[1]);
+            std::process::exit(5);
+        }
+    }
+        
+    pub fn downscale_command(self: &mut Self, words: Vec<&str>) {
+        if words.len() < 7 {
+            eprintln!("[ERROR] Not enough params for downsize command");
+            std::process::exit(3);
+        }
+        
+        if prelude::word_type(words[1].to_string()) != prelude::WordType::Variable 
+        || prelude::word_type(words[2].to_string()) != prelude::WordType::Variable 
+        || prelude::word_type(words[3].to_string()) != prelude::WordType::NumValue
+        || prelude::word_type(words[4].to_string()) != prelude::WordType::NumValue
+        || prelude::word_type(words[5].to_string()) != prelude::WordType::NumValue 
+        || prelude::word_type(words[6].to_string()) != prelude::WordType::NumValue {
+            eprintln!("[ERROR] Wrong types for params in img command");
+            std::process::exit(3);
+        }
+        
+        let pos_x = words[3].to_string().parse::<i32>().unwrap();
+        let pos_y = words[4].to_string().parse::<i32>().unwrap();
+        let opacity = words[5].to_string().parse::<u32>().unwrap();
+        let scale = words[6].to_string().parse::<u32>().unwrap();   
 
         if let (Some(&indexv1), Some(&indexv2)) = (self.imgs.get(words[1]), self.imgs.get(words[2])) {
             let widthv1 = self.memory[indexv1].width();
             let heightv1 = self.memory[indexv1].height();
+            let widthv2 = self.memory[indexv2].width();
+            let heightv2 = self.memory[indexv2].height();
             let cloned_v2_mem = self.memory[indexv2].clone();
-            for xi in pos_x..widthv1 {
-                for yi in pos_y..heightv1 {
-                    let pixelv1 = self.memory[indexv1].get_pixel_mut(xi, yi);
-                    let pixelv2 = cloned_v2_mem.get_pixel(xi - pos_x, yi - pos_y);
+            for xi in (std::cmp::max(pos_x, 0) as u32)..(std::cmp::min(widthv1 as i32 , widthv2 as i32 / scale as i32 + pos_x) as u32) {
+                for yi in (std::cmp::max(pos_y, 0) as u32)..(std::cmp::min(heightv1 as i32 , heightv2 as i32 / scale as i32+ pos_y) as u32) {
+                    let pixelv1 = self.memory[indexv1].get_pixel_mut(xi as u32, yi as u32);
+                    let pixelv2 = cloned_v2_mem.get_pixel((xi as i32 - pos_x) as u32 * scale, (yi as i32 - pos_y) as u32 * scale);
                     pixelv1.0[0] = ((u32::from(pixelv1.0[0]) * (100 - opacity))/100 + (u32::from(pixelv2.0[0]) * opacity) / 100) as u8;
                     pixelv1.0[1] = ((u32::from(pixelv1.0[1]) * (100 - opacity))/100 + (u32::from(pixelv2.0[1]) * opacity) / 100) as u8;
                     pixelv1.0[2] = ((u32::from(pixelv1.0[2]) * (100 - opacity))/100 + (u32::from(pixelv2.0[2]) * opacity) / 100) as u8;
@@ -167,7 +211,7 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
 
     pub fn circle_command(self: &mut Self, words: Vec<&str>) {
         if words.len() < 10 {
-            eprintln!("[ERROR] Not enough params for img command");
+            eprintln!("[ERROR] Not enough params for circle command");
             std::process::exit(3);
         }
         
@@ -235,6 +279,9 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
             prelude::WordType::CircleCommand => {
                 self.circle_command(words);
             },
+            prelude::WordType::DownscaleCommand => {
+                self.downscale_command(words);
+            },
             prelude::WordType::Variable => {
                 println!("VARIABLE");
             },
@@ -246,7 +293,9 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
 
     pub fn start(self: &mut Self) {
         while let Some(line) = self.next_line() {
-            self.interpret(line);
+            if ! line.starts_with("#") {
+                self.interpret(line);
+            }
         }   
     }
 }

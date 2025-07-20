@@ -1,3 +1,4 @@
 /target
-*.jpg
-*.jpeg
+/test
+/*.jpg
+/*.jpeg
