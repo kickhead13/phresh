@@ -1,4 +1,8 @@
 img i 'test.jpg'
 img j 'test.jpg'
-layer i j 200 200 50
+img k 'test.jpg'
+img h 'test.jpg'
+layer i j 10 0 40
+layer i k 0 10 40
+layer i h 20 0 40
 save i 'layer.jpg' jpg

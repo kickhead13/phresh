@@ -1,2 +1,2 @@
-img i 'test.jpg'
-save i 'test.jpg'
+img i 'tmp.jpg'
+save i 'test.jpg' jpg
