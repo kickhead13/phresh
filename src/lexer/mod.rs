@@ -257,6 +257,12 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
         }
     }
 
+    pub fn echo_command(self: &Self, words: Vec<&str>) {
+        for word in &words[1..] {
+            print!("{word} ");
+        }
+    }
+
     pub fn canvas_command(self: &Self, words: Vec<&str>) {
         println!("canvas {:?}", words);
     }
@@ -282,11 +288,14 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
             prelude::WordType::DownscaleCommand => {
                 self.downscale_command(words);
             },
+            prelude::WordType::EchoCommand => {
+                self.echo_command(words);
+            },
             prelude::WordType::Variable => {
-                println!("VARIABLE");
+                println!(" ");
             },
             _ => {
-                println!("WRONG");
+                println!(" ");
             }
         }
     }
