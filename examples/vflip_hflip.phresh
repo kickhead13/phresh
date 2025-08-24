@@ -1,0 +1,4 @@
+img i 'assets/pfp.jpg'
+vflip i
+hflip i
+save i 'test.jpg' jpg

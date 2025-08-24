@@ -7,6 +7,8 @@ pub enum WordType {
     CanvasCommand,
     CircleCommand,
     DownscaleCommand,
+    VFlipCommand,
+    HFlipCommand,
     EchoCommand,
     ExitCommand,
     Variable,
@@ -40,6 +42,14 @@ pub fn word_type(word: String) -> WordType {
     
     if word == statics::DOWNSCALE_COMMAND.to_string() {
         return WordType::DownscaleCommand;
+    }
+    
+    if word == statics::VFLIP_COMMAND.to_string() {
+        return WordType::VFlipCommand;
+    }
+
+    if word == statics::HFLIP_COMMAND.to_string() {
+        return WordType::HFlipCommand;
     }
 
     if word == statics::ECHO_COMMAND.to_string() {

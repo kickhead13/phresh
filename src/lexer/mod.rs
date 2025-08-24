@@ -259,6 +259,68 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
         }
     }
 
+        
+    pub fn vflip_command(self: &mut Self, words: Vec<&str>) {
+        if words.len() < 2 {
+            eprintln!("[ERROR] Not enough params for vflip command");
+            std::process::exit(7);
+        }
+        
+        if prelude::word_type(words[1].to_string()) != prelude::WordType::Variable {
+            eprintln!("[ERROR] Wrong types for params in vflip command");
+            std::process::exit(3);
+        }
+        
+        if let Some(&index) = self.imgs.get(words[1]) {
+            let mut cloned_memory = self.memory[index].clone();
+            let width = self.memory[index].width();
+            for x in 0..width {
+                for y in 0..(self.memory[index].height()) {
+                    let pixel = cloned_memory.get_pixel_mut(x as u32, y as u32);
+                    let fpixel = self.memory[index].get_pixel_mut((width - (x+1)) as u32, y as u32);
+
+                    std::mem::swap(&mut pixel.0[0], &mut fpixel.0[0]);
+                    std::mem::swap(&mut pixel.0[1], &mut fpixel.0[1]);
+                    std::mem::swap(&mut pixel.0[2], &mut fpixel.0[2]);
+                }
+            }
+        } else {
+            eprintln!("[ERROR] {} is not a variable", words[1]);
+            std::process::exit(5);
+        }
+    }
+    
+    
+    pub fn hflip_command(self: &mut Self, words: Vec<&str>) {
+        if words.len() < 2 {
+            eprintln!("[ERROR] Not enough params for hflip command");
+            std::process::exit(7);
+        }
+        
+        if prelude::word_type(words[1].to_string()) != prelude::WordType::Variable {
+            eprintln!("[ERROR] Wrong types for params in hflip command");
+            std::process::exit(3);
+        }
+        
+        if let Some(&index) = self.imgs.get(words[1]) {
+            let mut cloned_memory = self.memory[index].clone();
+            let height = self.memory[index].height();
+            for x in 0..(self.memory[index].width()) {
+                for y in 0..height {
+                    let pixel = cloned_memory.get_pixel_mut(x as u32, y as u32);
+                    let fpixel = self.memory[index].get_pixel_mut(x as u32, (height - (y+1)) as u32);
+
+                    std::mem::swap(&mut pixel.0[0], &mut fpixel.0[0]);
+                    std::mem::swap(&mut pixel.0[1], &mut fpixel.0[1]);
+                    std::mem::swap(&mut pixel.0[2], &mut fpixel.0[2]);
+                }
+            }
+        } else {
+            eprintln!("[ERROR] {} is not a variable", words[1]);
+            std::process::exit(5);
+        }
+    }
+
     pub fn echo_command(self: &Self, words: Vec<&str>) {
         for word in &words[1..] {
             print!("{word} ");
@@ -298,6 +360,12 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
             },
             prelude::WordType::DownscaleCommand => {
                 self.downscale_command(words);
+            },
+            prelude::WordType::VFlipCommand => {
+                self.vflip_command(words);
+            },
+            prelude::WordType::HFlipCommand => {
+                self.hflip_command(words);
             },
             prelude::WordType::EchoCommand => {
                 self.echo_command(words);
