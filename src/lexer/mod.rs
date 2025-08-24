@@ -18,7 +18,8 @@ use std::collections::HashMap;
 pub struct Lexer<'b, B> {
     pub buf_reader: &'b mut BufReader<B>,
     pub imgs: HashMap<String, usize>,
-    pub memory: Vec<RgbImage>
+    pub memory: Vec<RgbImage>,
+    pub console_mode: bool
 }
 
 impl<'b, B> Lexer<'b, B> where B: std::io::Read {
@@ -26,7 +27,8 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
         Self {
             buf_reader: buf_reader,
             imgs: HashMap::<String, usize>::new(),
-            memory: Vec::new()
+            memory: Vec::new(),
+            console_mode: false
         }
     }
     
@@ -261,6 +263,15 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
         for word in &words[1..] {
             print!("{word} ");
         }
+        println!();
+    }
+
+    pub fn exit_command(self: &Self, words: Vec<&str>) {
+        if words.len() == 1 {
+            std::process::exit(0);
+        } else {
+            std::process::exit(words[1].to_string().parse::<i32>().unwrap());
+        }
     }
 
     pub fn canvas_command(self: &Self, words: Vec<&str>) {
@@ -291,6 +302,9 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
             prelude::WordType::EchoCommand => {
                 self.echo_command(words);
             },
+            prelude::WordType::ExitCommand => {
+                self.exit_command(words);  
+            },
             prelude::WordType::Variable => {
                 println!(" ");
             },
@@ -301,12 +315,15 @@ impl<'b, B> Lexer<'b, B> where B: std::io::Read {
     }
 
     pub fn start(self: &mut Self) {
+        use std::io::Write;
         while let Some(line) = self.next_line() {
             if ! line.starts_with("#") {
                 self.interpret(line);
             }
-        }   
+            if self.console_mode  {
+                print!(" [phresh console] > ");
+                let _ = std::io::stdout().flush();
+            }
+        }
     }
 }
-
-

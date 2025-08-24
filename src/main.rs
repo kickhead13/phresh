@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
+use std::io::Write;
 
 mod io;
 mod lexer;
@@ -32,8 +33,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     match phresh_file {
         StdinFile::Stdin(stdin) => {
             println!(" dropped to phresh console:");
+            print!(" [phresh console] > ");
+            let _ = std::io::stdout().flush();
             let mut bufreader = BufReader::new(stdin);
             let mut lex = lexer::Lexer::new(&mut bufreader);
+            lex.console_mode = true;
             lex.start();
         },
         StdinFile::File(file) => {

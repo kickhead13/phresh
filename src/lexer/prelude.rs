@@ -8,6 +8,7 @@ pub enum WordType {
     CircleCommand,
     DownscaleCommand,
     EchoCommand,
+    ExitCommand,
     Variable,
     StringValue,
     Extension,
@@ -43,6 +44,11 @@ pub fn word_type(word: String) -> WordType {
 
     if word == statics::ECHO_COMMAND.to_string() {
         return WordType::EchoCommand;
+    }
+
+
+    if word == statics::EXIT_COMMAND.to_string() {
+        return WordType::ExitCommand;
     }
  
     if word == statics::JPG_EXTENSION.to_string() {
